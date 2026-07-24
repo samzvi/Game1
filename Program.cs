@@ -10,6 +10,11 @@ namespace Game1
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Enable systemd integration: sends "READY=1" via sd_notify when the app
+            // has finished starting, and reports service shutdown, so a unit file
+            // configured with Type=notify works correctly.
+            builder.Host.UseSystemd();
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
