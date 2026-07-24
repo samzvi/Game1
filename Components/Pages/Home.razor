@@ -6,6 +6,7 @@
 @inject IStringLocalizer<Home> Loc
 @inject GameRoomService GameRoomService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
 <PageTitle>Home</PageTitle>
 
@@ -25,14 +26,20 @@
     <div class="modal-backdrop-custom" @onclick="CloseModals">
         <div class="modal-box" @onclick:stopPropagation="true">
             <h3>@Loc["StartGame"]</h3>
-            <div class="mb-3">
-                <label for="startName" class="form-label">@Loc["YourName"]</label>
-                <input id="startName" class="form-control" @bind="startName" />
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
-                <button class="btn btn-primary" @onclick="SubmitStart">@Loc["Start"]</button>
-            </div>
+            <form @onsubmit:preventDefault="true" @onsubmit="OnStartFormSubmit">
+                <div class="mb-3">
+                    <label for="startName" class="form-label">@Loc["YourName"]</label>
+                    <input id="startName" class="form-control" maxlength="20" @bind="startName" />
+                </div>
+                @if (!string.IsNullOrEmpty(startError))
+                {
+                    <div class="alert alert-danger" role="alert">@startError</div>
+                }
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Loc["Start"]</button>
+                </div>
+            </form>
         </div>
     </div>
 }
@@ -42,18 +49,24 @@
     <div class="modal-backdrop-custom" @onclick="CloseModals">
         <div class="modal-box" @onclick:stopPropagation="true">
             <h3>@Loc["JoinGame"]</h3>
-            <div class="mb-3">
-                <label for="joinName" class="form-label">@Loc["YourName"]</label>
-                <input id="joinName" class="form-control" @bind="joinName" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">@Loc["RoomPin"]</label>
-                <PinInput Length="4" Value="@joinPin" ValueChanged="@(v => joinPin = v)" />
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
-                <button class="btn btn-primary" @onclick="SubmitJoin">@Loc["Join"]</button>
-            </div>
+            <form @onsubmit:preventDefault="true" @onsubmit="OnJoinFormSubmit">
+                <div class="mb-3">
+                    <label for="joinName" class="form-label">@Loc["YourName"]</label>
+                    <input id="joinName" class="form-control" maxlength="20" @bind="joinName" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Loc["RoomPin"]</label>
+                    <PinInput Length="4" Value="@joinPin" ValueChanged="@OnJoinPinChanged" />
+                </div>
+                @if (!string.IsNullOrEmpty(joinError))
+                {
+                    <div class="alert alert-danger" role="alert">@joinError</div>
+                }
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
+                    <button type="submit" class="btn btn-primary" disabled="@(joinPin.Length != 4)">@Loc["Join"]</button>
+                </div>
+            </form>
         </div>
     </div>
 }
@@ -66,6 +79,8 @@
     private string startName = string.Empty;
     private string joinName = string.Empty;
     private string joinPin = string.Empty;
+    private string? startError;
+    private string? joinError;
 
     private void OpenStartModal()
     {
@@ -83,23 +98,71 @@
     {
         showStartModal = false;
         showJoinModal = false;
+        startError = null;
+        joinError = null;
     }
 
-    private void SubmitStart()
+    private async Task SubmitStart()
     {
-        var room = GameRoomService.CreateRoom(startName);
+        var (room, error) = GameRoomService.CreateRoom(startName);
+        if (room is null)
+        {
+            startError = error switch
+            {
+                JoinRoomError.NicknameTooShort => Loc["ErrorNicknameTooShort"],
+                JoinRoomError.NicknameTooLong => Loc["ErrorNicknameTooLong"],
+                _ => Loc["ErrorGeneric"]
+            };
+            return;
+        }
+
+        startError = null;
+        await JS.InvokeVoidAsync("gameCookies.set", $"player_{room.Pin}", room.Player1!.Id.ToString());
+        CloseModals();
         NavigationManager.NavigateTo($"/game/{room.Pin}");
     }
 
-    private void SubmitJoin()
+    private Task OnStartFormSubmit()
     {
-        if (GameRoomService.JoinOrReconnect(joinPin, joinName) is { Room: GameRoom room, Error: null })
+        return SubmitStart();
+    }
+
+    private async Task OnJoinPinChanged(string value)
+    {
+        joinPin = value;
+        if (joinPin.Length == 4)
         {
+            await SubmitJoin();
+        }
+    }
+
+    private async Task SubmitJoin()
+    {
+        var (room, player, error) = GameRoomService.JoinOrReconnect(joinPin, joinName);
+        if (room is not null && player is not null && error == JoinRoomError.None)
+        {
+            joinError = null;
+            await JS.InvokeVoidAsync("gameCookies.set", $"player_{room.Pin}", player.Id.ToString());
+            CloseModals();
             NavigationManager.NavigateTo($"/game/{room.Pin}");
         }
         else
         {
-            // Show error message
+            // Only the PIN is cleared on failure; the player's name is kept so they don't have to retype it.
+            joinPin = string.Empty;
+            joinError = error switch
+            {
+                JoinRoomError.NotFound => Loc["ErrorRoomNotFound"],
+                JoinRoomError.RoomFull => Loc["ErrorRoomFull"],
+                JoinRoomError.NicknameTooShort => Loc["ErrorNicknameTooShort"],
+                JoinRoomError.NicknameTooLong => Loc["ErrorNicknameTooLong"],
+                _ => Loc["ErrorGeneric"]
+            };
         }
+    }
+
+    private Task OnJoinFormSubmit()
+    {
+        return SubmitJoin();
     }
 }

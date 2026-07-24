@@ -58,43 +58,19 @@
   <resheader name="writer">
 	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="StartGame" xml:space="preserve">
-	<value>Start a game</value>
+  <data name="GameTitle" xml:space="preserve">
+	<value>Hra: {0}</value>
   </data>
-  <data name="JoinGame" xml:space="preserve">
-	<value>Join a game</value>
+  <data name="RoomNotFound" xml:space="preserve">
+	<value>Místnost nenalezena nebo v ní hráč není.</value>
   </data>
-  <data name="YourName" xml:space="preserve">
-	<value>Your name</value>
+  <data name="Players" xml:space="preserve">
+	<value>Hráči:</value>
   </data>
-  <data name="RoomPin" xml:space="preserve">
-	<value>Room PIN</value>
+  <data name="Connected" xml:space="preserve">
+	<value>připojen</value>
   </data>
-  <data name="Cancel" xml:space="preserve">
-	<value>Cancel</value>
-  </data>
-  <data name="Start" xml:space="preserve">
-	<value>Start</value>
-  </data>
-  <data name="Join" xml:space="preserve">
-	<value>Join</value>
-  </data>
-  <data name="ErrorRoomNotFound" xml:space="preserve">
-	<value>Room not found. Check the PIN and try again.</value>
-  </data>
-  <data name="ErrorRoomFull" xml:space="preserve">
-	<value>This room is already full.</value>
-  </data>
-  <data name="ErrorInvalidNickname" xml:space="preserve">
-	<value>Please enter your name.</value>
-  </data>
-  <data name="ErrorNicknameTooShort" xml:space="preserve">
-	<value>Name must be at least 3 characters long.</value>
-  </data>
-  <data name="ErrorNicknameTooLong" xml:space="preserve">
-	<value>Name must be at most 20 characters long.</value>
-  </data>
-  <data name="ErrorGeneric" xml:space="preserve">
-	<value>Something went wrong. Please try again.</value>
+  <data name="Disconnected" xml:space="preserve">
+	<value>odpojen</value>
   </data>
 </root>

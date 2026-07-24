@@ -1,5 +1,92 @@
-﻿<h3>Game</h3>
+﻿@page "/game/{pin}"
+@rendermode InteractiveServer
+@implements IDisposable
+@using Game1.Models
+@using Game1.Services
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
+@inject GameRoomService GameRoomService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Game> Loc
+@inject IJSRuntime JS
+
+<h3>@string.Format(Loc["GameTitle"], pin)</h3>
+
+@if (room is null)
+{
+    <div class="alert alert-warning">@Loc["RoomNotFound"]</div>
+}
+else
+{
+    <div>
+        <p>@Loc["Players"]</p>
+        <ul>
+            @foreach (var p in room.Players)
+            {
+                <li>@p.Nickname (@(p.IsConnected ? Loc["Connected"] : Loc["Disconnected"]))</li>
+            }
+        </ul>
+    </div>
+}
 
 @code {
+    [Parameter]
+    public string pin { get; set; } = string.Empty;
 
+    private Guid? playerId;
+    private GameRoom? room;
+
+    protected override void OnInitialized()
+    {
+        room = GameRoomService.TryGetRoom(pin);
+        if (room is null)
+        {
+            // Keep the user on a not-found message; optionally redirect
+            // NavigationManager.NavigateTo("/not-found");
+            return;
+        }
+
+        // Subscribe to room changes so other clients' UIs update when players join/leave.
+        room.Changed += OnRoomChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && room is not null)
+        {
+            // The player id is stored client-side in a per-room cookie (set when the room
+            // was created/joined on the Home page) rather than exposed in the URL.
+            var stored = await JS.InvokeAsync<string?>("gameCookies.get", $"player_{pin}");
+            if (Guid.TryParse(stored, out var parsedPlayerId))
+            {
+                playerId = parsedPlayerId;
+
+                // Mark this player as connected again in case they refreshed the page
+                // (a brand-new circuit is created on refresh) after a previous disconnect.
+                GameRoomService.MarkConnected(pin, parsedPlayerId);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnRoomChanged()
+    {
+        // Ensure re-render on the component's renderer thread
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (room is not null)
+        {
+            room.Changed -= OnRoomChanged;
+        }
+
+        if (playerId is { } id)
+        {
+            // Fires when this browser tab's circuit is torn down (tab closed, navigated away,
+            // or connection lost and not reclaimed within the server's retention period).
+            GameRoomService.MarkDisconnected(pin, id);
+        }
+    }
 }

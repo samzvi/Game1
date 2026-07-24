@@ -79,4 +79,22 @@
   <data name="Join" xml:space="preserve">
 	<value>Připojit se</value>
   </data>
+  <data name="ErrorRoomNotFound" xml:space="preserve">
+	<value>Místnost nenalezena. Zkontroluj PIN a zkus to znovu.</value>
+  </data>
+  <data name="ErrorRoomFull" xml:space="preserve">
+	<value>Tato místnost je již plná.</value>
+  </data>
+  <data name="ErrorInvalidNickname" xml:space="preserve">
+	<value>Zadej prosím své jméno.</value>
+  </data>
+  <data name="ErrorNicknameTooShort" xml:space="preserve">
+	<value>Jméno musí mít alespoň 3 znaky.</value>
+  </data>
+  <data name="ErrorNicknameTooLong" xml:space="preserve">
+	<value>Jméno může mít maximálně 20 znaků.</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+	<value>Něco se pokazilo. Zkus to prosím znovu.</value>
+  </data>
 </root>
