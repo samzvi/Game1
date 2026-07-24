@@ -14,6 +14,8 @@ namespace Game1
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
+            builder.Services.AddSingleton<Services.GameRoomService>();
+
             builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
             var supportedCultures = new[] { "en", "cs" };
@@ -24,7 +26,7 @@ namespace Game1
                     .AddSupportedUICultures(supportedCultures);
                 options.RequestCultureProviders = new List<IRequestCultureProvider>
                 {
-                    new CookieRequestCultureProvider()
+                    new CookieRequestCultureProvider { CookieName = ".Culture" }
                 };
             });
 
@@ -49,24 +51,33 @@ namespace Game1
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 
-            app.MapGet("/culture/set", (HttpContext httpContext, string culture, string redirectUri) =>
+            app.MapGet("/culture/set", (HttpContext httpContext, string culture, string returnUrl) =>
             {
                 if (!string.IsNullOrEmpty(culture))
                 {
                     var requestCulture = new RequestCulture(culture, culture);
                     var cookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
-                    httpContext.Response.Cookies.Append(
-                        CookieRequestCultureProvider.DefaultCookieName,
-                        cookieValue,
-                        new CookieOptions
-                        {
-                            Expires = DateTimeOffset.UtcNow.AddYears(1),
-                            IsEssential = true,
-                            SameSite = SameSiteMode.Lax
-                        });
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddYears(1),
+                        IsEssential = true,
+                        SameSite = SameSiteMode.Lax
+                    };
+                    // Share the preference across samzvi.site and its subdomains (e.g. game.samzvi.site).
+                    if (!app.Environment.IsDevelopment())
+                    {
+                        cookieOptions.Domain = ".samzvi.site";
+                    }
+
+                    httpContext.Response.Cookies.Append(".Culture", cookieValue, cookieOptions);
                 }
 
-                return Results.LocalRedirect(redirectUri);
+                if (string.IsNullOrEmpty(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
+                {
+                    returnUrl = "/";
+                }
+
+                return Results.LocalRedirect(returnUrl);
             });
 
             app.Run();

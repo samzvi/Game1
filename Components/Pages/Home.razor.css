@@ -5,6 +5,12 @@
     margin-top: 3rem;
 }
 
+.home-buttons button {
+    height: 4rem;
+    width: 10rem;
+
+}
+
 .modal-backdrop-custom {
     position: fixed;
     inset: 0;
@@ -29,4 +35,13 @@
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
+}
+
+.hero {
+    width: 100%;
+    text-align: center;
+}
+
+.hero h1 {
+    margin: 0px;
 }

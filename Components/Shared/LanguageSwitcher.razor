@@ -1,32 +1,12 @@
 @using System.Globalization
 @inject NavigationManager Nav
 
-<div class="dropdown language-switcher">
-    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        @CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToUpperInvariant()
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end">
-        @foreach (var culture in SupportedCultures)
-        {
-            <li>
-                <a class="dropdown-item" href="@BuildCultureUri(culture)">@CultureNames[culture]</a>
-            </li>
-        }
-    </ul>
-</div>
-
-@code {
-    private static readonly string[] SupportedCultures = ["en", "cs"];
-
-    private static readonly Dictionary<string, string> CultureNames = new()
-    {
-        ["en"] = "English",
-        ["cs"] = "Čeština"
-    };
-
-    private string BuildCultureUri(string culture)
-    {
-        var redirectUri = Nav.ToBaseRelativePath(Nav.Uri);
-        return $"/culture/set?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString("/" + redirectUri)}";
-    }
+@{
+    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var currentPath = "/" + Nav.ToBaseRelativePath(Nav.Uri);
 }
+
+<div class="language-switcher @(currentCulture == "cs" ? "cz-active" : "")">
+    <a href="/culture/set?culture=en&returnUrl=@Uri.EscapeDataString(currentPath)" class="lang-btn" title="English"><span class="fi fi-us"></span></a>
+    <a href="/culture/set?culture=cs&returnUrl=@Uri.EscapeDataString(currentPath)" class="lang-btn" title="Čeština"><span class="fi fi-cz"></span></a>
+</div>

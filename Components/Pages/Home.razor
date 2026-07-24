@@ -1,9 +1,19 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using Microsoft.Extensions.Localization
+@using Game1.Services
+@using Game1.Models
 @inject IStringLocalizer<Home> Loc
+@inject GameRoomService GameRoomService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
+
+<div class="hero">
+    <h1>The Tank Game</h1>
+    <p>by samzvi</p>
+</div>
+
 
 <div class="home-buttons">
     <button class="btn btn-primary" @onclick="OpenStartModal">@Loc["StartGame"]</button>
@@ -37,8 +47,8 @@
                 <input id="joinName" class="form-control" @bind="joinName" />
             </div>
             <div class="mb-3">
-                <label for="joinPin" class="form-label">@Loc["RoomPin"]</label>
-                <input id="joinPin" class="form-control" @bind="joinPin" />
+                <label class="form-label">@Loc["RoomPin"]</label>
+                <PinInput Length="4" Value="@joinPin" ValueChanged="@(v => joinPin = v)" />
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
@@ -47,6 +57,7 @@
         </div>
     </div>
 }
+
 
 @code {
     private bool showStartModal;
@@ -76,11 +87,19 @@
 
     private void SubmitStart()
     {
-        // TODO: call GameRoomService.CreateRoom(startName) and navigate to /game/{pin}
+        var room = GameRoomService.CreateRoom(startName);
+        NavigationManager.NavigateTo($"/game/{room.Pin}");
     }
 
     private void SubmitJoin()
     {
-        // TODO: call GameRoomService.JoinOrReconnect(joinPin, joinName) and navigate to /game/{pin}
+        if (GameRoomService.JoinOrReconnect(joinPin, joinName) is { Room: GameRoom room, Error: null })
+        {
+            NavigationManager.NavigateTo($"/game/{room.Pin}");
+        }
+        else
+        {
+            // Show error message
+        }
     }
 }

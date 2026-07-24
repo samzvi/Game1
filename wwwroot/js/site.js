@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if ((document.documentElement.getAttribute('data-theme') || 'dark') === next) return;
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
-        document.cookie = `theme=${next};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+        var domainAttr = location.hostname.endsWith('samzvi.site') ? ';domain=.samzvi.site' : '';
+        document.cookie = `theme=${next};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax${domainAttr}`;
     }
 
     document.querySelectorAll('.theme-switcher').forEach(function (switcher) {

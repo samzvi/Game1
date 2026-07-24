@@ -1,0 +1,91 @@
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<div class="pin-input" @ref="containerRef">
+    @for (var i = 0; i < Length; i++)
+    {
+        var index = i;
+        <input type="text"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               maxlength="1"
+               class="form-control pin-digit"
+               @ref="inputRefs[index]"
+               value="@CurrentText(index)"
+               @oninput="e => OnInput(index, e)"
+               @onkeydown="e => OnKeyDown(index, e)" />
+    }
+</div>
+
+@code {
+    [Parameter] public int Length { get; set; } = 4;
+
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private char[] digits = [];
+    private ElementReference[] inputRefs = [];
+    private ElementReference containerRef;
+    private IJSObjectReference? module;
+
+    protected override void OnParametersSet()
+    {
+        if (digits.Length != Length)
+        {
+            digits = new char[Length];
+            inputRefs = new ElementReference[Length];
+        }
+
+        for (var i = 0; i < Length; i++)
+        {
+            digits[i] = i < Value.Length ? Value[i] : ' ';
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/pinInput.js");
+            await module.InvokeVoidAsync("attachPasteHandler", containerRef);
+        }
+    }
+
+    private string CurrentText(int index) => digits[index] == ' ' ? string.Empty : digits[index].ToString();
+
+    private async Task OnInput(int index, ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        var digit = text.Length > 0 ? text[^1] : ' ';
+
+        if (digit != ' ' && !char.IsDigit(digit))
+        {
+            digit = ' ';
+        }
+
+        digits[index] = digit;
+        await NotifyChangedAsync();
+
+        if (digit != ' ' && index < Length - 1)
+        {
+            await inputRefs[index + 1].FocusAsync();
+        }
+    }
+
+    private async Task OnKeyDown(int index, KeyboardEventArgs e)
+    {
+        if (e.Key == "Backspace" && digits[index] == ' ' && index > 0)
+        {
+            digits[index - 1] = ' ';
+            await NotifyChangedAsync();
+            await inputRefs[index - 1].FocusAsync();
+        }
+    }
+
+    private Task NotifyChangedAsync()
+    {
+        Value = new string(digits);
+        return ValueChanged.InvokeAsync(new string(digits).Replace(" ", string.Empty));
+    }
+}
