@@ -11,4 +11,11 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="publish\**" />
+    <Content Remove="publish\**" />
+    <EmbeddedResource Remove="publish\**" />
+    <None Remove="publish\**" />
+  </ItemGroup>
+
 </Project>
