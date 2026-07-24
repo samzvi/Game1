@@ -1,0 +1,86 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Home> Loc
+
+<PageTitle>Home</PageTitle>
+
+<div class="home-buttons">
+    <button class="btn btn-primary" @onclick="OpenStartModal">@Loc["StartGame"]</button>
+    <button class="btn btn-secondary" @onclick="OpenJoinModal">@Loc["JoinGame"]</button>
+</div>
+
+@if (showStartModal)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseModals">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <h3>@Loc["StartGame"]</h3>
+            <div class="mb-3">
+                <label for="startName" class="form-label">@Loc["YourName"]</label>
+                <input id="startName" class="form-control" @bind="startName" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
+                <button class="btn btn-primary" @onclick="SubmitStart">@Loc["Start"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showJoinModal)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseModals">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <h3>@Loc["JoinGame"]</h3>
+            <div class="mb-3">
+                <label for="joinName" class="form-label">@Loc["YourName"]</label>
+                <input id="joinName" class="form-control" @bind="joinName" />
+            </div>
+            <div class="mb-3">
+                <label for="joinPin" class="form-label">@Loc["RoomPin"]</label>
+                <input id="joinPin" class="form-control" @bind="joinPin" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseModals">@Loc["Cancel"]</button>
+                <button class="btn btn-primary" @onclick="SubmitJoin">@Loc["Join"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showStartModal;
+    private bool showJoinModal;
+
+    private string startName = string.Empty;
+    private string joinName = string.Empty;
+    private string joinPin = string.Empty;
+
+    private void OpenStartModal()
+    {
+        CloseModals();
+        showStartModal = true;
+    }
+
+    private void OpenJoinModal()
+    {
+        CloseModals();
+        showJoinModal = true;
+    }
+
+    private void CloseModals()
+    {
+        showStartModal = false;
+        showJoinModal = false;
+    }
+
+    private void SubmitStart()
+    {
+        // TODO: call GameRoomService.CreateRoom(startName) and navigate to /game/{pin}
+    }
+
+    private void SubmitJoin()
+    {
+        // TODO: call GameRoomService.JoinOrReconnect(joinPin, joinName) and navigate to /game/{pin}
+    }
+}

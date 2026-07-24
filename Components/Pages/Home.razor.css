@@ -1,0 +1,32 @@
+.home-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 3rem;
+}
+
+.modal-backdrop-custom {
+    position: fixed;
+    inset: 0;
+    background: var(--app-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.modal-box {
+    background: var(--app-modal-bg);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 0.5rem 1rem var(--app-modal-shadow);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}

@@ -1,0 +1,32 @@
+@using System.Globalization
+@inject NavigationManager Nav
+
+<div class="dropdown language-switcher">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        @CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToUpperInvariant()
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        @foreach (var culture in SupportedCultures)
+        {
+            <li>
+                <a class="dropdown-item" href="@BuildCultureUri(culture)">@CultureNames[culture]</a>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    private static readonly string[] SupportedCultures = ["en", "cs"];
+
+    private static readonly Dictionary<string, string> CultureNames = new()
+    {
+        ["en"] = "English",
+        ["cs"] = "Čeština"
+    };
+
+    private string BuildCultureUri(string culture)
+    {
+        var redirectUri = Nav.ToBaseRelativePath(Nav.Uri);
+        return $"/culture/set?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString("/" + redirectUri)}";
+    }
+}
